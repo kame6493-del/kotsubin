@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">こつびん</string>
+    <string name="title_activity_main">こつびん</string>
+    <string name="package_name">jp.kotsubin.app</string>
+    <string name="custom_url_scheme">jp.kotsubin.app</string>
+</resources>

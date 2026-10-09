@@ -1,0 +1,11 @@
+{
+  "appId": "jp.kotsubin.app",
+  "appName": "こつびん",
+  "webDir": "dist",
+  "backgroundColor": "#f6f1e7",
+  "android": { "allowMixedContent": false },
+  "ios": { "contentInset": "never" },
+  "plugins": {
+    "LocalNotifications": { "smallIcon": "ic_stat_kotsubin", "iconColor": "#2f6b5c" }
+  }
+}

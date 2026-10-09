@@ -1,0 +1,12 @@
+node_modules
+dist
+*.local
+scripts/e2e_out
+android/app/build
+android/.gradle
+android/local.properties
+ios/App/Pods
+releases/*.apk
+scripts/store_raw
+scripts/art_out
+__pycache__
