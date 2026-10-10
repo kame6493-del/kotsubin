@@ -5,7 +5,7 @@
 export const CONFIG = {
   appName: 'こつびん',
   version: '1.1.0',
-  revenuecat: { ios: '', android: '' },
+  revenuecat: { ios: 'appl_pJlgXcixREfIMnmvRTwTbuTQdjY', android: '' },
   /** 買い切り(非消耗型)。相棒3匹とびん2つが増える。記録の機能は何も閉じない */
   productId: 'kotsubin_nakama_set',
   entitlement: 'nakama',
