@@ -10,3 +10,8 @@ releases/*.apk
 scripts/store_raw
 scripts/art_out
 __pycache__
+scripts/mihon
+scripts/cut_out
+scripts/icon_src
+scripts/fonts/*.ttf
+store/_v1_backup

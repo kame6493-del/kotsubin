@@ -86,6 +86,12 @@ export function weekOf(key: string): [string, string] {
   return [start, addDays(start, 6)];
 }
 
+/** その日を含む週(月曜はじまり)の [月曜, 日曜] */
+export function weekOfMon(key: string): [string, string] {
+  const start = addDays(key, -((weekdayOf(key) + 6) % 7));
+  return [start, addDays(start, 6)];
+}
+
 /** 「2時間35分」「35分」「0分」 */
 export function fmtHM(ms: number): string {
   const m = Math.floor(Math.max(0, ms) / MIN);
@@ -115,6 +121,18 @@ export function fmtClock(ms: number): string {
 export function fmtTime(ts: number): string {
   const d = new Date(ts);
   return `${d.getHours()}:${pad(d.getMinutes())}`;
+}
+
+/** 「09:05」(見本の表の形) */
+export function fmtTime2(ts: number): string {
+  const d = new Date(ts);
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/** 「05:50」(分:秒。つぎの1粒までの残りなど、1時間に届かない物) */
+export function fmtMS(ms: number): string {
+  const s = Math.floor(Math.max(0, ms) / 1000);
+  return `${pad(Math.floor(s / 60))}:${pad(s % 60)}`;
 }
 
 /** input[type=datetime-local] の値 */

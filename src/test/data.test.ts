@@ -42,7 +42,7 @@ describe('記録の流れ', () => {
   it('作業中に種類を変えると、そこで区切って続ける', () => {
     let d = D.start(D.emptyData(), T0);
     d = D.switchCat(d, 'c-read', T0 + 20 * MIN);
-    expect(d.running).toEqual({ mode: 'focus', cat: 'c-read', start: T0 + 20 * MIN });
+    expect(d.running).toEqual({ mode: 'focus', cat: 'c-read', start: T0 + 20 * MIN, carry: 20 * MIN });
     expect(d.sessions[0].cat).toBe('c-study');
     expect(d.currentCat).toBe('c-read');
   });
@@ -103,7 +103,7 @@ describe('作業の種類', () => {
     expect(D.activeCats(d).some((x) => x.id === c.id)).toBe(true);
   });
   it('空の名前は足さない・最後の1つはしまえない', () => {
-    expect(D.addCategory(D.emptyData(), '   ', 'ume', T0).categories).toHaveLength(5);
+    expect(D.addCategory(D.emptyData(), '   ', 'ume', T0).categories).toHaveLength(4);
     let d = D.emptyData();
     for (const c of D.activeCats(d).slice(1)) d = D.archiveCategory(d, c.id, T0);
     expect(D.activeCats(d)).toHaveLength(1);
@@ -125,7 +125,7 @@ describe('作業の種類', () => {
 
 describe('保存した物の読み替え', () => {
   it('壊れた物・空は初期値', () => {
-    expect(D.normalize(null).categories).toHaveLength(5);
+    expect(D.normalize(null).categories).toHaveLength(4);
     expect(D.normalize('x').onboarded).toBe(false);
   });
   it('記録は残し、おかしな所だけ直す', () => {
@@ -161,6 +161,51 @@ describe('保存した物の読み替え', () => {
     let d = D.start(D.emptyData(), T0);
     d = D.stop(d, T0 + HOUR);
     expect(D.normalize(JSON.parse(JSON.stringify(d)))).toEqual(d);
+  });
+});
+
+describe('一時停止と休憩(見本1・見本5)', () => {
+  it('一時停止で時計が止まり、再開で続きから数える。記録は区切りごと', () => {
+    let d = D.start(D.emptyData(), T0);
+    d = D.pause(d, T0 + 24 * MIN);
+    expect(d.running).toMatchObject({ mode: 'pause', carry: 24 * MIN });
+    expect(D.sessionClock(d.running, T0 + 60 * MIN)).toBe(24 * MIN);
+    d = D.unpause(d, T0 + 30 * MIN);
+    expect(D.sessionClock(d.running, T0 + 40 * MIN)).toBe(34 * MIN);
+    d = D.stop(d, T0 + 40 * MIN);
+    expect(d.sessions.map((s) => (s.end - s.start) / MIN)).toEqual([24, 10]);
+  });
+  it('休憩は選んだ長さで起きる。延長すると残りがのびる', () => {
+    let d = D.start(D.emptyData(), T0);
+    d = D.rest(d, T0 + 30 * MIN, 5);
+    expect(D.restLeft(d.running, T0 + 32 * MIN)).toBe(3 * MIN);
+    d = D.setRestLen(d, 10);
+    expect(D.restLeft(d.running, T0 + 32 * MIN)).toBe(8 * MIN);
+    expect(D.restLeft(d.running, T0 + 50 * MIN)).toBe(0);
+    d = D.resume(d, T0 + 50 * MIN);
+    expect(d.running).toMatchObject({ mode: 'focus', start: T0 + 50 * MIN });
+    expect(d.sessions).toHaveLength(1);
+  });
+  it('一時停止中に休憩へ入れる', () => {
+    let d = D.pause(D.start(D.emptyData(), T0), T0 + 20 * MIN);
+    d = D.rest(d, T0 + 21 * MIN);
+    expect(d.running).toMatchObject({ mode: 'rest', len: 5 });
+    expect(d.sessions).toHaveLength(1);
+  });
+  it('一時停止・休憩も保存して読み直せる。前の版のびんの名前は読み替える', () => {
+    const d = D.pause(D.start(D.emptyData(), T0), T0 + 20 * MIN);
+    expect(D.normalize(JSON.parse(JSON.stringify(d)))).toEqual(d);
+    const old = D.normalize({ settings: { jar: 'square' }, categories: [{ id: 'x', name: '読書', color: 'wakaba', archived: false }] });
+    expect(old.settings.jar).toBe('hoshi');
+    expect(old.categories[0].icon).toBe('read');
+  });
+  it('記録のメモと、日のメモ', () => {
+    let d = D.addSession(D.emptyData(), { cat: 'c-study', start: T0, end: T0 + HOUR, note: '英単語の復習' }, T0 + 2 * HOUR);
+    d = D.setMemo(d, '2026-10-09', 'よくできた');
+    const n = D.normalize(JSON.parse(JSON.stringify(d)));
+    expect(n.sessions[0].note).toBe('英単語の復習');
+    expect(n.memos['2026-10-09']).toBe('よくできた');
+    expect(D.setMemo(n, '2026-10-09', '  ').memos['2026-10-09']).toBeUndefined();
   });
 });
 

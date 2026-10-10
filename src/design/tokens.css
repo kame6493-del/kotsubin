@@ -1,99 +1,109 @@
 /*
- * こつびんのデザインの決まり。画面はこの変数だけで色・文字・余白・角丸を決める。
- * 主役の色は「びんの緑」1色。ほかは生成りの中間色。金平糖の色は絵の中だけで使い、UI の飾りには使わない。
- * 文字の段は 12 / 15 / 17 / 22 / 44 の5段。余白は 8 の倍数(4 は線の内側だけ)。角丸は 6 と 12 の2つ。
+ * こつびんのデザインの決まり(見本: 持ち主から届いた画面見本とデザインガイド)。
+ * 生成りの地に、角の丸いカード。主役の色はボタンの青。作業の種類の色(青・橙・緑・紫)は domain/colors.ts。
+ * 文字は Zen Maru Gothic(丸ゴシック。public/fonts に必要な字だけ入れてある)。
  */
+@font-face {
+  font-family: "ZenMaru";
+  src: url("/fonts/zmg-500.woff2") format("woff2");
+  font-weight: 400 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "ZenMaru";
+  src: url("/fonts/zmg-700.woff2") format("woff2");
+  font-weight: 700 900;
+  font-display: swap;
+}
+
 :root {
-  --bg: #f6f1e7;
-  --surface: #fffcf6;
-  --sunk: #efe8da;
-  --ink: #2b2723;
-  --ink-2: #6b6258;
-  --ink-3: #978c7f;
-  --line: #e2d8c7;
-  --primary: #2f6b5c;
-  --primary-press: #25574b;
+  --bg: #f5ecdd;
+  --card: #fcf5e9;
+  --card-2: #fffaf2;
+  --sunk: #f1e6d4;
+  --line: #e9dcc6;
+  --ink: #4b3627;
+  --ink-strong: #4a2f20;
+  --ring-track: #dfe9f6;
+  --ink-2: #7b6452;
+  --ink-3: #a8937e;
+  --primary: #4b8fe4;
+  --primary-2: #3a7bd8;
+  --primary-soft: #e3eefb;
   --on-primary: #ffffff;
-  --primary-soft: #dfe9e2;
-  --alert: #b0502e;
-  --scene: #efe5d3;
-  --scene-wall: #f3ebdd;
-  --table: #c49a6c;
-  --table-edge: #9c7550;
-  --cue: #fbe7b5;
-  --jar-glass: #eef3f0;
-  --jar-edge: #7f9a99;
-  --jar-shine: 0.55;
+  --gold: #f6c64a;
+  --gold-2: #eeb02c;
+  --brown: #7b5236;
+  --alert: #e0705a;
+  --alert-soft: #fbe6e0;
+  --shadow: 0 2px 8px rgba(122, 88, 48, 0.10), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
+  --shadow-btn: 0 3px 0 rgba(40, 90, 170, 0.25), 0 6px 14px rgba(60, 110, 190, 0.22);
+  --art-filter: none;
 
   --fs-cap: 12px;
+  --fs-small: 13px;
   --fs-body: 15px;
   --fs-title: 17px;
   --fs-head: 22px;
-  --fs-num: 44px;
+  --fs-num: 46px;
   --lh: 1.55;
 
-  --s1: 8px;
-  --s2: 16px;
-  --s3: 24px;
-  --s4: 32px;
-  --s5: 40px;
-  --gutter: 16px;
-
-  --r-s: 6px;
-  --r-m: 12px;
-
+  --gutter: 12px;
+  --r-s: 12px;
+  --r-m: 18px;
+  --r-l: 24px;
   --tap: 48px;
-  --tabbar: 56px;
-  --font: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Noto Sans CJK JP", "Yu Gothic UI", Meiryo, sans-serif;
+  --tabbar: 64px;
+  --font: "ZenMaru", "Hiragino Maru Gothic ProN", "Hiragino Sans", "Noto Sans JP", "Noto Sans CJK JP", "Yu Gothic UI", Meiryo, sans-serif;
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #171513;
-    --surface: #201d1a;
-    --sunk: #12100f;
-    --ink: #eee8de;
-    --ink-2: #b3a99c;
-    --ink-3: #82786c;
-    --line: #34302a;
-    --primary: #87c3b1;
-    --primary-press: #9fd2c2;
-    --on-primary: #0f201b;
-    --primary-soft: #22332d;
-    --alert: #e3896a;
-    --scene: #25211d;
-    --scene-wall: #312c26;
-    --table: #6e5338;
-    --table-edge: #4f3a27;
-    --cue: #4a3f22;
-    --jar-glass: #2d3634;
-    --jar-edge: #82a2a0;
-    --jar-shine: 0.18;
+    --bg: #211a15;
+    --card: #2d241d;
+    --card-2: #352b23;
+    --sunk: #1b1511;
+    --line: #463a2f;
+    --ink: #f3e7d7;
+  --ink-strong: #fbf1e3;
+  --ring-track: #33404f;
+    --ink-2: #cdb9a3;
+    --ink-3: #9c8873;
+    --primary: #6aa8f0;
+    --primary-2: #5597e6;
+    --primary-soft: #23344a;
+    --on-primary: #0e1a2a;
+    --brown: #c99a73;
+    --alert: #f08d78;
+    --alert-soft: #43271f;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    --shadow-btn: 0 3px 0 rgba(0, 0, 0, 0.35);
+    --art-filter: brightness(0.82) saturate(0.95);
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #171513;
-  --surface: #201d1a;
-  --sunk: #12100f;
-  --ink: #eee8de;
-  --ink-2: #b3a99c;
-  --ink-3: #82786c;
-  --line: #34302a;
-  --primary: #87c3b1;
-  --primary-press: #9fd2c2;
-  --on-primary: #0f201b;
-  --primary-soft: #22332d;
-  --alert: #e3896a;
-  --scene: #25211d;
-  --scene-wall: #312c26;
-  --table: #6e5338;
-  --table-edge: #4f3a27;
-  --cue: #4a3f22;
-  --jar-glass: #2d3634;
-  --jar-edge: #82a2a0;
-  --jar-shine: 0.18;
+  --bg: #211a15;
+  --card: #2d241d;
+  --card-2: #352b23;
+  --sunk: #1b1511;
+  --line: #463a2f;
+  --ink: #f3e7d7;
+  --ink-strong: #fbf1e3;
+  --ring-track: #33404f;
+  --ink-2: #cdb9a3;
+  --ink-3: #9c8873;
+  --primary: #6aa8f0;
+  --primary-2: #5597e6;
+  --primary-soft: #23344a;
+  --on-primary: #0e1a2a;
+  --brown: #c99a73;
+  --alert: #f08d78;
+  --alert-soft: #43271f;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --shadow-btn: 0 3px 0 rgba(0, 0, 0, 0.35);
+  --art-filter: brightness(0.82) saturate(0.95);
   color-scheme: dark;
 }

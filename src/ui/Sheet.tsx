@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { IconClose } from './icons';
 
 /** 下から出る面。外側を押すか × で閉じる */
@@ -10,7 +11,8 @@ export function Sheet({ title, onClose, children, label }: { title: string; onCl
     window.addEventListener('keydown', esc);
     return () => window.removeEventListener('keydown', esc);
   }, [onClose]);
-  return (
+  // 画面のどこから開いても、いちばん手前に出す(body の直下へ)
+  return createPortal(
     <div className="sheet-back" onClick={onClose}>
       <div className="sheet" role="dialog" aria-modal="true" aria-label={label ?? title} tabIndex={-1} ref={ref} onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head">
@@ -20,5 +22,5 @@ export function Sheet({ title, onClose, children, label }: { title: string; onCl
         <div className="sheet-body">{children}</div>
       </div>
     </div>
-  );
+  , document.body);
 }

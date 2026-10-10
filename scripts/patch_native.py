@@ -33,7 +33,7 @@ strings.write_text(s, encoding="utf-8", newline="\n")
 drawable = APP / "android/app/src/main/res/drawable/ic_stat_kotsubin.xml"
 drawable.parent.mkdir(parents=True, exist_ok=True)
 drawable.write_text("""<?xml version="1.0" encoding="utf-8"?>
-<!-- 通知の小さいアイコン: ふたつきのびんと金平糖(白一色) -->
+<!-- 通知の小さいアイコン: ふたつきのびんとこんぺいとう(白一色) -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
     <path android:fillColor="#FFFFFFFF" android:pathData="M8,2h8v3.5h-8z" />

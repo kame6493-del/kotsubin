@@ -2,7 +2,7 @@
   "appId": "jp.kotsubin.app",
   "appName": "こつびん",
   "webDir": "dist",
-  "backgroundColor": "#f6f1e7",
+  "backgroundColor": "#f5ecdd",
   "android": { "allowMixedContent": false },
   "ios": { "contentInset": "never" },
   "plugins": {

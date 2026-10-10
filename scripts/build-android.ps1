@@ -47,8 +47,8 @@ try {
   if ($p.ExitCode -ne 0) { Get-Content "$env:TEMP\kb_release_err.txt" -Tail 30; throw "Gradle が失敗しました (exit $($p.ExitCode))" }
   $out = Join-Path $repo 'releases'
   New-Item -ItemType Directory -Force $out | Out-Null
-  Copy-Item "$proj\app\build\outputs\bundle\release\app-release.aab" "$out\kotsubin-1.0.0-release.aab" -Force
-  Copy-Item "$proj\app\build\outputs\apk\release\app-release.apk" "$out\kotsubin-1.0.0-release.apk" -Force
+  Copy-Item "$proj\app\build\outputs\bundle\release\app-release.aab" "$out\kotsubin-1.1.0-release.aab" -Force
+  Copy-Item "$proj\app\build\outputs\apk\release\app-release.apk" "$out\kotsubin-1.1.0-release.apk" -Force
   Write-Output "出力: $out"
 } finally {
   subst $drive /D

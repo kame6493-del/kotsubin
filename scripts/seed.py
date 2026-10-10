@@ -4,15 +4,15 @@ from datetime import datetime, timedelta
 
 KEY = "CapacitorStorage.kotsubin.data.v1"
 CATS = [
-    {"id": "c-study", "name": "勉強", "color": "sora", "archived": False},
-    {"id": "c-work", "name": "仕事", "color": "kinako", "archived": False},
-    {"id": "c-make", "name": "創作", "color": "momo", "archived": False},
-    {"id": "c-read", "name": "読書", "color": "wakaba", "archived": False},
-    {"id": "c-home", "name": "家のこと", "color": "mikan", "archived": False},
+    {"id": "c-study", "name": "勉強", "color": "sora", "icon": "book", "archived": False},
+    {"id": "c-work", "name": "仕事", "color": "mikan", "icon": "bag", "archived": False},
+    {"id": "c-read", "name": "読書", "color": "wakaba", "icon": "read", "archived": False},
+    {"id": "c-hobby", "name": "趣味", "color": "fuji", "icon": "game", "archived": False},
 ]
+NOTES = {"c-study": ["英単語の復習", "数学の問題集", "過去問"], "c-work": ["企画資料の作成", "ミーティング・整理", "メールの返信"], "c-read": ["やさしい心理学", "小説"], "c-hobby": ["ゲームでリフレッシュ", "イラスト"]}
 
 
-def seeded(days=24, running=None, today_minutes=(95, 40, 30), onboarded=True, seed=7, animal="hamster", jar="round", theme="auto"):
+def seeded(days=24, running=None, today_minutes=(95, 40, 30), onboarded=True, seed=7, animal="hamster", jar="std", theme="auto"):
     rnd = random.Random(seed)
     now = datetime.now().replace(second=0, microsecond=0)
     sessions = []
@@ -24,22 +24,22 @@ def seeded(days=24, running=None, today_minutes=(95, 40, 30), onboarded=True, se
         t = day + timedelta(hours=rnd.choice([8, 9, 10, 13]), minutes=rnd.choice([0, 10, 25, 40]))
         for _ in range(rnd.randint(2, 4)):
             mins = rnd.choice([25, 35, 50, 60, 75, 90])
-            cat = rnd.choice(["c-study", "c-study", "c-work", "c-make", "c-read", "c-home"])
-            sessions.append({"id": f"s{sid}", "cat": cat, "start": int(t.timestamp() * 1000), "end": int((t + timedelta(minutes=mins)).timestamp() * 1000)})
+            cat = rnd.choice(["c-study", "c-study", "c-work", "c-work", "c-read", "c-hobby"])
+            sessions.append({"id": f"s{sid}", "cat": cat, "start": int(t.timestamp() * 1000), "end": int((t + timedelta(minutes=mins)).timestamp() * 1000), "note": rnd.choice(NOTES[cat])})
             sid += 1
             t += timedelta(minutes=mins + rnd.choice([10, 15, 30, 60]))
     # きょう
     t = now - timedelta(minutes=sum(today_minutes) + 60)
-    for mins, cat in zip(today_minutes, ["c-study", "c-make", "c-read"]):
+    for mins, cat in zip(today_minutes, ["c-study", "c-work", "c-read", "c-hobby"]):
         if mins <= 0:
             continue
-        sessions.append({"id": f"s{sid}", "cat": cat, "start": int(t.timestamp() * 1000), "end": int((t + timedelta(minutes=mins)).timestamp() * 1000)})
+        sessions.append({"id": f"s{sid}", "cat": cat, "start": int(t.timestamp() * 1000), "end": int((t + timedelta(minutes=mins)).timestamp() * 1000), "note": NOTES[cat][0]})
         sid += 1
         t += timedelta(minutes=mins + 10)
     data = {
-        "v": 1, "onboarded": onboarded, "categories": CATS, "currentCat": "c-study", "sessions": sessions, "running": running,
+        "v": 1, "onboarded": onboarded, "categories": CATS, "currentCat": "c-study", "sessions": sessions, "running": running, "memos": {},
         "settings": {"animal": animal, "names": {"hamster": "もち", "enaga": "ゆき", "usagi": "しらたま", "pengin": "あずき"}, "jar": jar,
-                     "restMin": 10, "chimeMin": 0, "dayStartHour": 0, "goals": [0, 180, 180, 180, 180, 180, 120], "theme": theme, "notify": "on"},
+                     "restMin": 5, "chimeMin": 0, "dayStartHour": 0, "goals": [0, 180, 180, 180, 180, 180, 120], "theme": theme, "notify": "on"},
     }
     return data
 

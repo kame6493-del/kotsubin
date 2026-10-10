@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HOUR, MIN, addDays, dayKey, dayRange, fmtClock, fmtHM, fmtShort, fromLocalInput, piecesOfDay, toLocalInput, totalAll, totalBetween, totalOfDay, weekOf, weekdayOf } from '../domain/time';
+import { HOUR, MIN, addDays, fmtMS, fmtTime2, weekOfMon, dayKey, dayRange, fmtClock, fmtHM, fmtShort, fromLocalInput, piecesOfDay, toLocalInput, totalAll, totalBetween, totalOfDay, weekOf, weekdayOf } from '../domain/time';
 
 const at = (y: number, m: number, d: number, h = 0, mi = 0) => new Date(y, m - 1, d, h, mi).getTime();
 const S = (id: string, start: number, end: number, cat = 'a') => ({ id, cat, start, end });
@@ -69,5 +69,15 @@ describe('表示の形', () => {
     expect(toLocalInput(t)).toBe('2026-10-09T07:05');
     expect(fromLocalInput('2026-10-09T07:05')).toBe(t);
     expect(fromLocalInput('')).toBeNull();
+  });
+});
+
+describe('月曜はじまりの週(たな・ふりかえり)と表の形', () => {
+  it('weekOfMon・fmtMS・fmtTime2', () => {
+    expect(weekOfMon('2026-10-09')).toEqual(['2026-10-05', '2026-10-11']);
+    expect(weekOfMon('2026-10-11')).toEqual(['2026-10-05', '2026-10-11']);
+    expect(weekOfMon('2026-10-12')).toEqual(['2026-10-12', '2026-10-18']);
+    expect(fmtMS(5 * 60_000 + 50_000)).toBe('05:50');
+    expect(fmtTime2(new Date(2026, 9, 9, 9, 5).getTime())).toBe('09:05');
   });
 });

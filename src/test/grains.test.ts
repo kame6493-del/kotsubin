@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { grainsOfDay, untilNextGrain } from '../domain/grains';
-import { MIN } from '../domain/time';
+import { grainsBySession, grainsOfDay, longestStreak, untilNextGrain } from '../domain/grains';
+import { MIN, addDays } from '../domain/time';
 import type { Category } from '../domain/types';
 
 const at = (h: number, mi = 0) => new Date(2026, 9, 9, h, mi).getTime();
 const cats: Category[] = [
-  { id: 'a', name: '勉強', color: 'sora', archived: false },
-  { id: 'b', name: '読書', color: 'wakaba', archived: false },
+  { id: 'a', name: '勉強', color: 'sora', icon: 'book', archived: false },
+  { id: 'b', name: '読書', color: 'wakaba', icon: 'read', archived: false },
 ];
 
-describe('金平糖', () => {
+describe('こんぺいとう', () => {
   it('10分ごとに1粒', () => {
     expect(grainsOfDay([{ id: '1', cat: 'a', start: at(9), end: at(9, 9) }], cats, '2026-10-09', 0, 10)).toEqual([]);
     expect(grainsOfDay([{ id: '1', cat: 'a', start: at(9), end: at(9, 10) }], cats, '2026-10-09', 0, 10)).toEqual(['sora']);
@@ -41,5 +41,18 @@ describe('金平糖', () => {
   it('つぎの1粒まで', () => {
     expect(untilNextGrain(0, 10)).toBe(10 * MIN);
     expect(untilNextGrain(14 * MIN, 10)).toBe(6 * MIN);
+  });
+  it('記録ごとの粒(タイムラインの「5粒」)', () => {
+    const s = [
+      { id: '1', cat: 'a', start: at(9), end: at(9, 50) },
+      { id: '2', cat: 'b', start: at(10), end: at(10, 6) },
+      { id: '3', cat: 'b', start: at(11), end: at(11, 6) },
+    ];
+    const m = grainsBySession(s, '2026-10-09', 0, 10);
+    expect([m.get('1'), m.get('2'), m.get('3')]).toEqual([5, 0, 1]);
+  });
+  it('いちばん長く続いた日数', () => {
+    expect(longestStreak(new Set(['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-05']), addDays)).toBe(3);
+    expect(longestStreak(new Set(), addDays)).toBe(0);
   });
 });

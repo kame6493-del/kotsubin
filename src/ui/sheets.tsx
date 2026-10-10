@@ -1,23 +1,23 @@
 import { useState } from 'react';
-import { AnimalMini, Grain, JarMini } from '../art/Mini';
+import { Candy } from '../art/Jar';
 import { CANDY, CANDY_ORDER } from '../domain/colors';
 import * as D from '../domain/data';
 import { HOUR, MIN, fmtHM, fromLocalInput, toLocalInput } from '../domain/time';
-import type { CandyColor, Category, Session } from '../domain/types';
-import { purchase, restore } from '../platform/billing';
+import type { CandyColor, CatIcon, Category, Session } from '../domain/types';
 import { tap } from '../platform/native';
 import type { Ctx } from './App';
+import { CatGlyph, IconSave, IconTrash } from './icons';
 import { Sheet } from './Sheet';
 
 /* ---------- 記録を直す・足す ---------- */
 
-export function SessionSheet({ ctx, initial, defaultStart, onClose }: { ctx: Ctx; initial?: Session; defaultStart: number; dayKey: string; onClose: () => void }) {
+export function SessionSheet({ ctx, initial, defaultStart, onClose }: { ctx: Ctx; initial?: Session; defaultStart: number; onClose: () => void }) {
   const { d, set, toast } = ctx;
   const cats = D.activeCats(d);
-  const startCat = initial ? initial.cat : d.currentCat;
-  const [cat, setCat] = useState(startCat);
+  const [cat, setCat] = useState(initial ? initial.cat : d.currentCat);
   const [start, setStart] = useState(toLocalInput(initial?.start ?? defaultStart));
   const [end, setEnd] = useState(toLocalInput(initial?.end ?? Math.min(Date.now(), defaultStart + HOUR)));
+  const [note, setNote] = useState(initial?.note ?? '');
   const [err, setErr] = useState<string | null>(null);
   const s = fromLocalInput(start);
   const e = fromLocalInput(end);
@@ -30,8 +30,10 @@ export function SessionSheet({ ctx, initial, defaultStart, onClose }: { ctx: Ctx
     const why = s === null || e === null ? '時刻を入れてね' : D.checkSession({ start: s, end: e }, now);
     if (why) { setErr(why); return; }
     tap();
-    if (initial) set((x) => D.updateSession(x, { ...initial, cat, start: s!, end: e! }));
-    else set((x) => D.addSession(x, { cat, start: s!, end: e! }, now));
+    const n = note.trim().slice(0, 40);
+    const body = { cat, start: s!, end: e!, ...(n ? { note: n } : {}) };
+    if (initial) set((x) => D.updateSession(x, { id: initial.id, ...body }));
+    else set((x) => D.addSession(x, body, now));
     toast(initial ? '直したよ' : '記録を足したよ');
     onClose();
   };
@@ -48,10 +50,11 @@ export function SessionSheet({ ctx, initial, defaultStart, onClose }: { ctx: Ctx
     <Sheet title={initial ? '記録を直す' : '記録を足す'} onClose={onClose}>
       <div className="field">
         <div className="field-label" id="f-cat">作業の種類</div>
-        <div className="chips chips-wrap" role="radiogroup" aria-labelledby="f-cat">
+        <div className="cat-tabs wrap" role="radiogroup" aria-labelledby="f-cat">
           {shown.map((c) => (
-            <button key={c.id} className={'chip' + (c.id === cat ? ' on' : '')} role="radio" aria-checked={c.id === cat} onClick={() => setCat(c.id)}>
-              <Grain color={CANDY[c.color].hex} />
+            <button key={c.id} className={'cat-tab' + (c.id === cat ? ' on' : '')} role="radio" aria-checked={c.id === cat} onClick={() => setCat(c.id)}
+              style={{ ['--c' as string]: CANDY[c.color].ink, ['--cs' as string]: CANDY[c.color].soft }}>
+              <CatGlyph icon={c.icon} size={20} />
               <span>{c.name}</span>
             </button>
           ))}
@@ -65,9 +68,13 @@ export function SessionSheet({ ctx, initial, defaultStart, onClose }: { ctx: Ctx
         <span className="field-label">おわり</span>
         <input className="input num" type="datetime-local" value={end} onChange={(ev) => { setEnd(ev.target.value); setErr(null); }} />
       </label>
+      <label className="field">
+        <span className="field-label">なにをした？(なくてもいいよ)</span>
+        <input className="input" value={note} maxLength={40} placeholder="たとえば 英単語の復習" onChange={(ev) => setNote(ev.target.value)} />
+      </label>
       <p className={'field-note num' + (err ? ' is-err' : '')} role={err ? 'alert' : undefined}>{err ?? (len ? `${fmtHM(len)}の記録になるよ` : '')}</p>
-      <button className="btn btn-primary btn-big" onClick={save}>{initial ? 'これで直す' : 'これで足す'}</button>
-      {initial && <button className="btn btn-text btn-alert" onClick={remove}>この記録を消す</button>}
+      <button className="btn btn-primary btn-big" onClick={save}><IconSave size={22} />{initial ? 'これで直す' : 'これで足す'}</button>
+      {initial && <button className="btn btn-text btn-alert" onClick={remove}><IconTrash size={20} />この記録を消す</button>}
     </Sheet>
   );
 }
@@ -79,14 +86,16 @@ export function CategorySheet({ ctx, initial, onClose }: { ctx: Ctx; initial?: C
   const used = new Set(D.activeCats(d).map((c) => c.color));
   const [name, setName] = useState(initial?.name ?? '');
   const [color, setColor] = useState<CandyColor>(initial?.color ?? CANDY_ORDER.find((c) => !used.has(c)) ?? 'momo');
+  const [icon, setIcon] = useState<CatIcon | null>(initial?.icon ?? null);
   const canArchive = initial && !initial.archived && D.activeCats(d).length > 1;
+  const shownIcon = icon ?? D.guessIcon(name);
 
   const save = () => {
     const n = name.trim();
     if (!n) return;
     tap();
-    if (initial) set((x) => D.updateCategory(x, initial.id, { name: n, color }));
-    else set((x) => D.addCategory(x, n, color, Date.now()));
+    if (initial) set((x) => D.updateCategory(x, initial.id, { name: n, color, icon: shownIcon }));
+    else set((x) => D.addCategory(x, n, color, Date.now(), shownIcon));
     onClose();
   };
 
@@ -97,16 +106,26 @@ export function CategorySheet({ ctx, initial, onClose }: { ctx: Ctx; initial?: C
         <input className="input" value={name} maxLength={20} placeholder="たとえば 英語、ピアノ" onChange={(e) => setName(e.target.value)} autoFocus={!initial} />
       </label>
       <div className="field">
-        <div className="field-label" id="f-color">金平糖の色</div>
+        <div className="field-label" id="f-color">こんぺいとうの色</div>
         <div className="swatches" role="radiogroup" aria-labelledby="f-color">
           {CANDY_ORDER.map((c) => (
             <button key={c} className={'swatch' + (c === color ? ' on' : '')} role="radio" aria-checked={c === color} aria-label={CANDY[c].label} onClick={() => setColor(c)}>
-              <Grain color={CANDY[c].hex} scale={5} />
+              <Candy color={c} size={34} />
             </button>
           ))}
         </div>
       </div>
-      <button className="btn btn-primary btn-big" disabled={!name.trim()} onClick={save}>{initial ? 'これで直す' : 'これで足す'}</button>
+      <div className="field">
+        <div className="field-label" id="f-icon">しるし</div>
+        <div className="swatches" role="radiogroup" aria-labelledby="f-icon" style={{ color: CANDY[color].ink }}>
+          {D.ICONS.map((i) => (
+            <button key={i} className={'swatch' + (i === shownIcon ? ' on' : '')} role="radio" aria-checked={i === shownIcon} aria-label={ICON_LABEL[i]} onClick={() => setIcon(i)}>
+              <CatGlyph icon={i} size={26} />
+            </button>
+          ))}
+        </div>
+      </div>
+      <button className="btn btn-primary btn-big" disabled={!name.trim()} onClick={save}><IconSave size={22} />{initial ? 'これで直す' : 'これで足す'}</button>
       {canArchive && (
         <button
           className="btn btn-text"
@@ -123,75 +142,21 @@ export function CategorySheet({ ctx, initial, onClose }: { ctx: Ctx; initial?: C
   );
 }
 
-/* ---------- なかまセット ---------- */
+const ICON_LABEL: Record<CatIcon, string> = { book: '本', bag: 'かばん', read: '読書', game: 'ゲーム', pen: 'えんぴつ', music: '音楽', home: '家', star: 'ほし', run: '運動', code: 'パソコン' };
 
-export function PaywallSheet({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
-  const { billing, setBilling, toast } = ctx;
-  const [busy, setBusy] = useState(false);
-  const owned = billing.owned;
+/* ---------- その日のメモ ---------- */
 
-  const buy = async () => {
-    setBusy(true);
-    try {
-      const ok = await purchase(billing);
-      if (ok) {
-        setBilling({ ...billing, owned: true } as typeof billing);
-        toast('なかまがふえたよ。せっていで選べます');
-        onClose();
-      }
-    } catch (e) {
-      console.error(e);
-      toast('購入できませんでした。時間をおいてもう一度ためしてね');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const doRestore = async () => {
-    setBusy(true);
-    try {
-      const ok = await restore();
-      if (ok) { setBilling({ ...billing, owned: true } as typeof billing); toast('購入を復元したよ'); onClose(); }
-      else toast('このアカウントで買った記録は見つかりませんでした');
-    } catch {
-      toast('復元できませんでした。通信を確かめてね');
-    } finally {
-      setBusy(false);
-    }
-  };
-
+export function MemoSheet({ ctx, dayKey, onClose }: { ctx: Ctx; dayKey: string; onClose: () => void }) {
+  const [text, setText] = useState(ctx.d.memos[dayKey] ?? '');
   return (
-    <Sheet title="なかまセット" onClose={onClose}>
-      <div className="pay-art" aria-hidden>
-        <AnimalMini animal="enaga" scale={3} hold={CANDY.sora.hex} />
-        <AnimalMini animal="usagi" scale={3} hold={CANDY.momo.hex} />
-        <AnimalMini animal="pengin" scale={3} hold={CANDY.kinako.hex} />
-      </div>
-      <div className="pay-art pay-jars" aria-hidden>
-        <JarMini jar="square" colors={demoColors(26)} scale={2} />
-        <JarMini jar="pot" colors={demoColors(20)} scale={2} />
-      </div>
-      <ul className="pay-list">
-        <li>相棒が3匹ふえます(シマエナガ・うさぎ・ペンギン)</li>
-        <li>びんの形が2つふえます(かくびん・つぼ)</li>
-        <li>一度買えばずっと使えます。毎月の支払いはありません</li>
-      </ul>
-      <p className="pay-note">記録の機能はぜんぶ無料のままです。あとから有料にすることはありません。</p>
-      {owned ? (
-        <p className="pay-owned">もう持っています。せっていの「相棒」と「びん」から選べます。</p>
-      ) : billing.status === 'ready' ? (
-        <button className="btn btn-primary btn-big" disabled={busy} onClick={buy}>{billing.price}で買う</button>
-      ) : (
-        <button className="btn btn-primary btn-big" disabled>{billing.status === 'loading' ? 'ストアを確かめています' : billing.reason}</button>
-      )}
-      {!owned && <button className="btn btn-text" disabled={busy} onClick={doRestore}>購入を復元</button>}
+    <Sheet title="この日のメモ" onClose={onClose}>
+      <label className="field">
+        <span className="field-label">メモ(400字まで)</span>
+        <textarea className="input textarea" value={text} maxLength={400} rows={5} placeholder="きょうできたこと、気づいたこと" onChange={(e) => setText(e.target.value)} />
+      </label>
+      <button className="btn btn-primary btn-big" onClick={() => { tap(); ctx.set((x) => D.setMemo(x, dayKey, text)); ctx.toast(text.trim() ? 'メモを残したよ' : 'メモを消したよ'); onClose(); }}><IconSave size={22} />保存</button>
     </Sheet>
   );
-}
-
-export function demoColors(n: number): string[] {
-  const order = ['sora', 'sora', 'kinako', 'momo', 'wakaba', 'sora', 'fuji', 'mikan'] as const;
-  return Array.from({ length: n }, (_, i) => CANDY[order[Math.floor(i / 4) % order.length]].hex);
 }
 
 /* ---------- 通知を使っていいか(使う直前に1回) ---------- */
@@ -199,7 +164,7 @@ export function demoColors(n: number): string[] {
 export function NotifyAskSheet({ name, onAnswer }: { name: string; onAnswer: (yes: boolean) => void }) {
   return (
     <Sheet title="起きたら知らせてもいい？" onClose={() => onAnswer(false)}>
-      <p className="sheet-text">ひとやすみが終わったら、画面を消していても{name}が通知で知らせます。通知はそれ以外に使いません。</p>
+      <p className="sheet-text">休憩が終わったら、画面を消していても{name}が通知で知らせます。通知はそれ以外に使いません。</p>
       <button className="btn btn-primary btn-big" onClick={() => onAnswer(true)}>知らせてほしい</button>
       <button className="btn btn-text" onClick={() => onAnswer(false)}>いまはいい</button>
     </Sheet>
@@ -223,4 +188,10 @@ export function LongRunSheet({ start, now, onKeep, onEnd }: { start: number; now
       <button className="btn btn-text" onClick={onKeep}>まだ続けている</button>
     </Sheet>
   );
+}
+
+/** 見本の画面写真用の、色のまざった粒 */
+export function demoColors(n: number): CandyColor[] {
+  const order: CandyColor[] = ['sora', 'mikan', 'wakaba', 'fuji', 'kinako', 'momo', 'sora', 'wakaba'];
+  return Array.from({ length: n }, (_, i) => order[(i * 5) % order.length]);
 }
