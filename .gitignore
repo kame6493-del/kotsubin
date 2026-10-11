@@ -15,3 +15,7 @@ scripts/cut_out
 scripts/icon_src
 scripts/fonts/*.ttf
 store/_v1_backup
+
+# 宣伝の動画・サムネ(ずんだもんの立ち絵を合成するので公開リポジトリに入れない)
+store/promo/
+store/_cream_backup_*/promo/
